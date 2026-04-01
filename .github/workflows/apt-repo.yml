@@ -1,0 +1,73 @@
+name: Update APT Repository
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  update-apt-repo:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+        continue-on-error: true
+
+      - name: Setup repo directory
+        run: |
+          mkdir -p gh-pages/deb/pool
+          mkdir -p gh-pages/deb/dists/stable/main/binary-amd64
+          mkdir -p gh-pages/deb/dists/stable/main/binary-arm64
+
+      - name: Download .deb assets from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "*.deb" \
+            --dir gh-pages/deb/pool
+
+      - name: Generate Packages index
+        run: |
+          cd gh-pages/deb
+          dpkg-scanpackages --arch amd64 pool > dists/stable/main/binary-amd64/Packages
+          gzip -k -f dists/stable/main/binary-amd64/Packages
+          dpkg-scanpackages --arch arm64 pool > dists/stable/main/binary-arm64/Packages
+          gzip -k -f dists/stable/main/binary-arm64/Packages
+
+      - name: Generate Release file
+        run: |
+          cd gh-pages/deb/dists/stable
+          apt-ftparchive release . > Release
+
+      - name: Create index page
+        run: |
+          cat > gh-pages/index.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html>
+          <head><title>lazymake apt repository</title></head>
+          <body>
+          <h1>lazymake apt repository</h1>
+          <pre>
+          echo "deb [trusted=yes] https://febriliankr.github.io/lazymake/deb stable main" | sudo tee /etc/apt/sources.list.d/lazymake.list
+          sudo apt update
+          sudo apt install lazymake
+          </pre>
+          </body>
+          </html>
+          HTMLEOF
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: gh-pages
+
+      - uses: actions/deploy-pages@v4

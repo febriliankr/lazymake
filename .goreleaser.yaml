@@ -32,6 +32,20 @@ brews:
     install: |
       bin.install "lazymake"
 
+nfpms:
+  - id: lazymake
+    package_name: lazymake
+    vendor: febriliankr
+    homepage: https://github.com/febriliankr/lazymake
+    maintainer: febriliankr <febriliankr@gmail.com>
+    description: Interactive TUI for Makefiles - like lazygit, but for make
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    section: utils
+    priority: optional
+
 checksum:
   name_template: checksums.txt
 

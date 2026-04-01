@@ -32,6 +32,20 @@ brew tap febriliankr/tap
 brew install lazymake
 ```
 
+### Ubuntu/Debian
+
+```bash
+echo "deb [trusted=yes] https://febriliankr.github.io/lazymake/deb stable main" | sudo tee /etc/apt/sources.list.d/lazymake.list
+sudo apt update
+sudo apt install lazymake
+```
+
+Or download the `.deb` directly from [Releases](https://github.com/febriliankr/lazymake/releases):
+
+```bash
+sudo dpkg -i lazymake_*.deb
+```
+
 ### Go
 
 ```bash
